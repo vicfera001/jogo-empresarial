@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jogo de Tabuleiro - Gerenciamento de Empresas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
+  <h1 class="text-3xl font-semibold mb-6 text-gray-800">Jogo de Tabuleiro - Gerenciamento de Empresas</h1>
+
+  <button id="addPlayerBtn" class="mb-6 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+    <i class="fas fa-user-plus mr-2"></i>Adicionar Jogador
+  </button>
+
+  <div id="playersContainer" class="w-full max-w-4xl space-y-4"></div>
+
+  <script>
+    const maxPlayers = 6;
+    const minPlayers = 2;
+    const initialBudget = 500000.00;
+
+    let players = [
+        {
+            name: 'Jogador 1',
+            cash: initialBudget,
+            stock: 0,
+            marketShare: 0,
+            transportation: 0,
+            advertising: 0,
+            sector: {id:'technology', name:'Empresa de Tecnologia'},
+            marketing: {},
+            },
+            {
+            name: 'Jogador 2',
+            cash: initialBudget,
+            stock: 0,
+            marketShare: 0,
+            transportation: 0,
+            advertising: 0,
+            sector: {id:'food', name:'Empresa de Alimentos'},
+            marketing: {}
+        }
+    ];
+
+    const playersContainer = document.getElementById('playersContainer');
+    const addPlayerBtn = document.getElementById('addPlayerBtn');
+
+    function formatCurrency(value) {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function createPlayerCard(player, index) {
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between';
+
+      const info = document.createElement('div');
+      info.className = 'flex flex-col space-y-1';
+
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = 'Nome da Empresa:';
+      nameLabel.className = 'text-gray-700 font-semibold';
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = player.name;
+      nameInput.placeholder = 'Digite o nome da empresa';
+      nameInput.className = 'border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500';
+      nameInput.addEventListener('input', (e) => {
+        players[index].name = e.target.value;
+      });
+
+      info.appendChild(nameLabel);
+      info.appendChild(nameInput);
+
+      const stats = document.createElement('div');
+      stats.className = 'mt-3 md:mt-0 flex flex-wrap gap-6 text-gray-700';
+
+      const cash = document.createElement('div');
+      cash.innerHTML = `<i class="fas fa-wallet mr-1 text-green-600"></i> Caixa: <span class="font-semibold">${formatCurrency(player.cash)}</span>`;
+
+      const stock = document.createElement('div');
+      stock.innerHTML = `<i class="fas fa-boxes mr-1 text-yellow-600"></i> Estoque: <span class="font-semibold">${player.stock}</span>`;
+
+      const marketShare = document.createElement('div');
+      marketShare.innerHTML = `<i class="fas fa-chart-line mr-1 text-blue-600"></i> Participação de Mercado: <span class="font-semibold">${player.marketShare}%</span>`;
+
+      stats.appendChild(cash);
+      stats.appendChild(stock);
+      stats.appendChild(marketShare);
+
+      card.appendChild(info);
+      card.appendChild(stats);
+
+      return card;
+    }
+
+    function renderPlayers() {
+      playersContainer.innerHTML = '';
+      players.forEach((player, index) => {
+        const playerCard = createPlayerCard(player, index);
+        playersContainer.appendChild(playerCard);
+      });
+
+      addPlayerBtn.disabled = players.length >= maxPlayers;
+    }
+
+    addPlayerBtn.addEventListener('click', () => {
+      if (players.length < maxPlayers) {
+        players.push({
+          name: '',
+          cash: initialBudget,
+          stock: 0,
+          marketShare: 0,
+        });
+        renderPlayers();
+        updatePlayerOptions();
+        updateMarketingPlayerOptions();
+        updateTransportPlayerOptions();
+      }
+    });
+
+    // Initialize with minimum players
+    for (let i = 0; i < minPlayers; i++) {
+      players.push({
+        name: '',
+        cash: initialBudget,
+        stock: 0,
+        marketShare: 0,
+      });
+    }
+    renderPlayers();
+  </script>
+
+  <section class="w-full max-w-4xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Quadro de Mercados Brasileiros</h2>
+    <div id="marketsContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+  </section>
+
+  <script>
+    const markets = [
+      {
+        name: 'São Paulo',
+        population: 12300000,
+        demandLevel: 'Alta',
+        transportCost: 5000,
+      },
+      {
+        name: 'Rio de Janeiro',
+        population: 6748000,
+        demandLevel: 'Média',
+        transportCost: 4000,
+      },
+      {
+        name: 'Belo Horizonte',
+        population: 2520000,
+        demandLevel: 'Média',
+        transportCost: 3500,
+      },
+      {
+        name: 'Porto Alegre',
+        population: 1480000,
+        demandLevel: 'Baixa',
+        transportCost: 3000,
+      },
+      {
+        name: 'Salvador',
+        population: 2880000,
+        demandLevel: 'Alta',
+        transportCost: 4500,
+      },
+      {
+        name: 'Fortaleza',
+        population: 2680000,
+        demandLevel: 'Média',
+        transportCost: 4200,
+      },
+    ];
+
+    function formatNumber(num) {
+      return num.toLocaleString('pt-BR');
+    }
+
+    function renderMarkets() {
+      const container = document.getElementById('marketsContainer');
+      container.innerHTML = '';
+      markets.forEach((market) => {
+        const card = document.createElement('div');
+        card.className = 'border border-gray-300 rounded p-4 bg-gray-50 shadow-sm';
+
+        const title = document.createElement('h3');
+        title.textContent = market.name;
+        title.className = 'text-lg font-semibold mb-2 text-gray-800';
+
+        const population = document.createElement('p');
+        population.innerHTML = `<i class="fas fa-users mr-2 text-indigo-600"></i>População: <span class="font-semibold">${formatNumber(market.population)}</span>`;
+
+        const demand = document.createElement('p');
+        demand.innerHTML = `<i class="fas fa-chart-bar mr-2 text-green-600"></i>Nível de Demanda: <span class="font-semibold">${market.demandLevel}</span>`;
+
+        const transport = document.createElement('p');
+        transport.innerHTML = `<i class="fas fa-truck mr-2 text-yellow-600"></i>Custo de Transporte: <span class="font-semibold">${formatNumber(market.transportCost)}</span>`;
+
+        card.appendChild(title);
+        card.appendChild(population);
+        card.appendChild(demand);
+        card.appendChild(transport);
+
+        container.appendChild(card);
+      });
+    }
+
+    renderMarkets();
+  </script>
+
+  <section class="w-full max-w-4xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Criação e Precificação de Produtos</h2>
+    <form id="productForm" class="space-y-4">
+      <div>
+        <label for="productName" class="block text-gray-700 font-semibold mb-1">Nome do Produto:</label>
+        <input type="text" id="productName" name="productName" placeholder="Digite o nome do produto" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label for="productPrice" class="block text-gray-700 font-semibold mb-1">Preço de Venda (R$):</label>
+        <input type="number" id="productPrice" name="productPrice" min="0" step="0.01" placeholder="0,00" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label for="productQuality" class="block text-gray-700 font-semibold mb-1">Qualidade:</label>
+        <select id="productQuality" name="productQuality" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione a qualidade</option>
+          <option value="low">Baixa</option>
+          <option value="medium">Média</option>
+          <option value="high">Alta</option>
+        </select>
+      </div>
+      <div>
+        <label for="productEco" class="block text-gray-700 font-semibold mb-1">Respeito ao Meio Ambiente:</label>
+        <select id="productEco" name="productEco" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione</option>
+          <option value="yes">Sim</option>
+          <option value="no">Não</option>
+        </select>
+      </div>
+      <button type="submit"
+        class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition flex items-center">
+        <i class="fas fa-plus mr-2"></i>Adicionar Produto
+      </button>
+    </form>
+
+    <div id="productsContainer" class="mt-6 space-y-4"></div>
+  </section>
+
+  <script>
+    const productForm = document.getElementById('productForm');
+    const productsContainer = document.getElementById('productsContainer');
+
+    const qualityEffects = {
+      low: { costMultiplier: 1, demandMultiplier: 0.8 },
+      medium: { costMultiplier: 1.5, demandMultiplier: 1 },
+      high: { costMultiplier: 2, demandMultiplier: 1.3 },
+    };
+
+    let products = [];
+
+    function formatCurrency(value) {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function renderProducts() {
+      productsContainer.innerHTML = '';
+      products.forEach((product, index) => {
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 border border-gray-300 rounded p-4 shadow-sm';
+
+        const title = document.createElement('h3');
+        title.textContent = product.name;
+        title.className = 'text-lg font-semibold mb-2 text-gray-800';
+
+        const price = document.createElement('p');
+        price.innerHTML = `<i class="fas fa-tag mr-2 text-blue-600"></i>Preço de Venda: <span class="font-semibold">${formatCurrency(product.price)}</span>`;
+
+        const quality = document.createElement('p');
+        quality.innerHTML = `<i class="fas fa-star mr-2 text-yellow-500"></i>Qualidade: <span class="font-semibold capitalize">${product.quality}</span>`;
+
+        const eco = document.createElement('p');
+        eco.innerHTML = `<i class="fas fa-leaf mr-2 text-green-600"></i>Respeito ao Meio Ambiente: <span class="font-semibold">${product.eco === 'yes' ? 'Sim' : 'Não'}</span>`;
+
+        const productionCost = (product.price / qualityEffects[product.quality].demandMultiplier) * qualityEffects[product.quality].costMultiplier;
+
+        const cost = document.createElement('p');
+        cost.innerHTML = `<i class="fas fa-cogs mr-2 text-gray-600"></i>Custo de Produção Estimado: <span class="font-semibold">${formatCurrency(productionCost)}</span>`;
+
+        card.appendChild(title);
+        card.appendChild(price);
+        card.appendChild(quality);
+        card.appendChild(eco);
+        card.appendChild(cost);
+
+        productsContainer.appendChild(card);
+      });
+    }
+
+    productForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = productForm.productName.value.trim();
+      const price = parseFloat(productForm.productPrice.value);
+      const quality = productForm.productQuality.value;
+      const eco = productForm.productEco.value;
+
+      if (!name || isNaN(price) || !quality || !eco) {
+        alert('Por favor, preencha todos os campos corretamente.');
+        return;
+      }
+
+      products.push({ name, price, quality, eco });
+      renderProducts();
+      updateProductOptions();
+      updateTransportProductOptions();
+      productForm.reset();
+    });
+  </script>
+
+  <section class="w-full max-w-4xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Sistema de Produção e Custos</h2>
+    <form id="productionForm" class="space-y-4">
+      <div>
+        <label for="selectPlayer" class="block text-gray-700 font-semibold mb-1">Jogador:</label>
+        <select id="selectPlayer" name="selectPlayer" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione o jogador</option>
+        </select>
+      </div>
+      <div>
+        <label for="selectProduct" class="block text-gray-700 font-semibold mb-1">Produto:</label>
+        <select id="selectProduct" name="selectProduct" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione o produto</option>
+        </select>
+      </div>
+      <div>
+        <label for="unitsToProduce" class="block text-gray-700 font-semibold mb-1">Unidades a Produzir:</label>
+        <input type="number" id="unitsToProduce" name="unitsToProduce" min="1" step="1" value="1" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <button type="submit"
+        class="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition flex items-center">
+        <i class="fas fa-industry mr-2"></i>Produzir
+      </button>
+    </form>
+
+    <div id="productionResult" class="mt-4 text-gray-800 font-semibold"></div>
+  </section>
+
+  <script>
+    const productionForm = document.getElementById('productionForm');
+    const selectPlayer = document.getElementById('selectPlayer');
+    const selectProduct = document.getElementById('selectProduct');
+    const unitsToProduce = document.getElementById('unitsToProduce');
+    const productionResult = document.getElementById('productionResult');
+
+    // Fixed costs constants
+    const fixedCosts = {
+      salaries: 5000,
+      rent: 3000,
+    };
+
+    function updatePlayerOptions() {
+      selectPlayer.innerHTML = '<option value="" disabled selected>Selecione o jogador</option>';
+      players.forEach((player, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = player.name || `Jogador ${index + 1}`;
+        selectPlayer.appendChild(option);
+      });
+    }
+
+    function updateProductOptions() {
+      selectProduct.innerHTML = '<option value="" disabled selected>Selecione o produto</option>';
+      products.forEach((product, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = product.name;
+        selectProduct.appendChild(option);
+      });
+    }
+
+    function calculateProductionCost(product, units) {
+      const qualityEffect = qualityEffects[product.quality];
+      const variableCostPerUnit = (product.price / qualityEffect.demandMultiplier) * qualityEffect.costMultiplier;
+      const variableCostTotal = variableCostPerUnit * units;
+      const totalCost = fixedCosts.salaries + fixedCosts.rent + variableCostTotal;
+      return totalCost;
+    }
+
+    productionForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const playerIndex = parseInt(selectPlayer.value);
+      const productIndex = parseInt(selectProduct.value);
+      const units = parseInt(unitsToProduce.value);
+
+      if (isNaN(playerIndex) || isNaN(productIndex) || isNaN(units) || units < 1) {
+        productionResult.textContent = 'Por favor, preencha todos os campos corretamente.';
+        productionResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      const player = players[playerIndex];
+      const product = products[productIndex];
+      const totalCost = calculateProductionCost(product, units);
+
+      if (player.cash < totalCost) {
+        productionResult.textContent = `Saldo insuficiente. Custo total: ${formatCurrency(totalCost)}. Caixa disponível: ${formatCurrency(player.cash)}.`;
+        productionResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      // Deduct cost and increase stock
+      player.cash -= totalCost;
+      player.stock += units;
+
+      productionResult.textContent = `Produção concluída! ${units} unidades de "${product.name}" produzidas. Custo total: ${formatCurrency(totalCost)}.`;
+      productionResult.className = 'mt-4 text-green-600 font-semibold';
+
+      // Update UI
+      renderPlayers();
+      updatePlayerOptions();
+      updateProductOptions();
+      updateTransportProductOptions();
+      
+      productionForm.reset();
+    });
+
+    // Initialize options on page load and when players/products change
+    updatePlayerOptions();
+    updateProductOptions();
+  </script>
+
+  <section class="w-full max-w-4xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Investimentos em Publicidade e Marketing</h2>
+    <form id="marketingForm" class="space-y-4">
+      <div>
+        <label for="marketingPlayer" class="block text-gray-700 font-semibold mb-1">Jogador:</label>
+        <select id="marketingPlayer" name="marketingPlayer" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione o jogador</option>
+        </select>
+      </div>
+      <div>
+        <label for="marketingMarket" class="block text-gray-700 font-semibold mb-1">Mercado:</label>
+        <select id="marketingMarket" name="marketingMarket" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione o mercado</option>
+        </select>
+      </div>
+      <div>
+        <label for="investmentAmount" class="block text-gray-700 font-semibold mb-1">Valor do Investimento (R$):</label>
+        <input type="number" id="investmentAmount" name="investmentAmount" min="0" step="0.01" value="0" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <button type="submit"
+        class="px-6 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 transition flex items-center">
+        <i class="fas fa-bullhorn mr-2"></i>Investir
+      </button>
+    </form>
+
+    <div id="marketingResult" class="mt-4 text-gray-800 font-semibold"></div>
+  </section>
+
+  <script>
+    const marketingForm = document.getElementById('marketingForm');
+    const marketingPlayer = document.getElementById('marketingPlayer');
+    const marketingMarket = document.getElementById('marketingMarket');
+    const investmentAmount = document.getElementById('investmentAmount');
+    const marketingResult = document.getElementById('marketingResult');
+
+    function updateMarketingPlayerOptions() {
+      marketingPlayer.innerHTML = '<option value="" disabled selected>Selecione o jogador</option>';
+      players.forEach((player, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = player.name || `Jogador ${index + 1}`;
+        marketingPlayer.appendChild(option);
+      });
+    }
+
+    function updateMarketingMarketOptions() {
+      marketingMarket.innerHTML = '<option value="" disabled selected>Selecione o mercado</option>';
+      markets.forEach((market, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = market.name;
+        marketingMarket.appendChild(option);
+      });
+    }
+
+    marketingForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const playerIndex = parseInt(marketingPlayer.value);
+      const marketIndex = parseInt(marketingMarket.value);
+      const investment = parseFloat(investmentAmount.value);
+
+      if (isNaN(playerIndex) || isNaN(marketIndex) || isNaN(investment) || investment <= 0) {
+        marketingResult.textContent = 'Por favor, preencha todos os campos corretamente.';
+        marketingResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      const player = players[playerIndex];
+      const market = markets[marketIndex];
+
+      if (player.cash < investment) {
+        marketingResult.textContent = `Saldo insuficiente. Caixa disponível: ${formatCurrency(player.cash)}.`;
+        marketingResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      // Deduct investment from player's cash
+      player.cash -= investment;
+
+      // Increase brand recognition and sales in the market
+      if (!player.marketing) {
+        player.marketing = {};
+      }
+      if (!player.marketing[market.name]) {
+        player.marketing[market.name] = { recognition: 0, salesBoost: 0 };
+      }
+
+      // Simple formula: recognition and sales boost proportional to investment
+      player.marketing[market.name].recognition += investment * 0.1;
+      player.marketing[market.name].salesBoost += investment * 0.05;
+
+      marketingResult.textContent = `Investimento realizado com sucesso! Reconhecimento da marca e vendas aumentados em ${market.name}.`;
+      marketingResult.className = 'mt-4 text-green-600 font-semibold';
+
+      // Update UI
+      renderPlayers();
+      updateMarketingPlayerOptions();
+      updateMarketingMarketOptions();
+      marketingForm.reset();
+    });
+
+    // Initialize options on page load and when players/markets change
+    updateMarketingPlayerOptions();
+    updateMarketingMarketOptions();
+  </script>
+
+  <section class="w-full max-w-4xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Transporte e Logística</h2>
+    <form id="transportForm" class="space-y-4">
+      <div>
+        <label for="transportPlayer" class="block text-gray-700 font-semibold mb-1">Jogador:</label>
+        <select id="transportPlayer" name="transportPlayer" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione o jogador</option>
+        </select>
+      </div>
+      <div>
+        <label for="transportProduct" class="block text-gray-700 font-semibold mb-1">Produto:</label>
+        <select id="transportProduct" name="transportProduct" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione o produto</option>
+        </select>
+      </div>
+      <div>
+        <label for="transportMarket" class="block text-gray-700 font-semibold mb-1">Mercado:</label>
+        <select id="transportMarket" name="transportMarket" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>Selecione o mercado</option>
+        </select>
+      </div>
+      <div>
+        <label for="transportQuantity" class="block text-gray-700 font-semibold mb-1">Quantidade a Transportar:</label>
+        <input type="number" id="transportQuantity" name="transportQuantity" min="1" step="1" value="1" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <button type="submit"
+        class="px-6 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition flex items-center">
+        <i class="fas fa-truck-moving mr-2"></i>Transportar
+      </button>
+    </form>
+
+    <div id="transportResult" class="mt-4 text-gray-800 font-semibold"></div>
+  </section>
+
+  <script>
+    const transportForm = document.getElementById('transportForm');
+    const transportPlayer = document.getElementById('transportPlayer');
+    const transportProduct = document.getElementById('transportProduct');
+    const transportMarket = document.getElementById('transportMarket');
+    const transportQuantity = document.getElementById('transportQuantity');
+    const transportResult = document.getElementById('transportResult');
+
+    function updateTransportPlayerOptions() {
+      transportPlayer.innerHTML = '<option value="" disabled selected>Selecione o jogador</option>';
+      players.forEach((player, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = player.name || `Jogador ${index + 1}`;
+        transportPlayer.appendChild(option);
+      });
+    }
+
+    function updateTransportProductOptions() {
+      transportProduct.innerHTML = '<option value="" disabled selected>Selecione o produto</option>';
+      products.forEach((product, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = product.name;
+        transportProduct.appendChild(option);
+      });
+    }
+
+    function updateTransportMarketOptions() {
+      transportMarket.innerHTML = '<option value="" disabled selected>Selecione o mercado</option>';
+      markets.forEach((market, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = market.name;
+        transportMarket.appendChild(option);
+      });
+    }
+
+    function calculateTransportCost(market, quantity) {
+      return market.transportCost * quantity;
+    }
+
+    transportForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const playerIndex = parseInt(transportPlayer.value);
+      const productIndex = parseInt(transportProduct.value);
+      const marketIndex = parseInt(transportMarket.value);
+      const quantity = parseInt(transportQuantity.value);
+
+      if (isNaN(playerIndex) || isNaN(productIndex) || isNaN(marketIndex) || isNaN(quantity) || quantity < 1) {
+        transportResult.textContent = 'Por favor, preencha todos os campos corretamente.';
+        transportResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      const player = players[playerIndex];
+      const product = products[productIndex];
+      const market = markets[marketIndex];
+      const cost = calculateTransportCost(market, quantity);
+
+      if (player.cash < cost) {
+        transportResult.textContent = `Saldo insuficiente. Custo do transporte: ${formatCurrency(cost)}. Caixa disponível: ${formatCurrency(player.cash)}.`;
+        transportResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      if (player.stock < quantity) {
+        transportResult.textContent = `Estoque insuficiente. Estoque disponível: ${player.stock}.`;
+        transportResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      // Deduct cost and reduce stock
+      player.cash -= cost;
+      player.stock -= quantity;
+
+      transportResult.textContent = `Transporte concluído! ${quantity} unidades de "${product.name}" transportadas para ${market.name}. Custo total: ${formatCurrency(cost)}.`;
+      transportResult.className = 'mt-4 text-green-600 font-semibold';
+
+      // Update UI
+      renderPlayers();
+      updateTransportPlayerOptions();
+      updateTransportProductOptions();
+      updateTransportMarketOptions();
+      transportForm.reset();
+    });
+
+    // Initialize options on page load and when players/products/markets change
+    updateTransportPlayerOptions();
+    updateTransportProductOptions();
+    updateTransportMarketOptions();
+  </script>
+
+  <section class="w-full max-w-4xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Próxima Rodada - Cálculo de Vendas e Receita</h2>
+    <button id="nextRoundBtn" class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition flex items-center">
+      <i class="fas fa-forward mr-2"></i>Próxima Rodada
+    </button>
+    <div id="roundResult" class="mt-4 text-gray-800 font-semibold"></div>
+  </section>
+
+  <script>
+    const nextRoundBtn = document.getElementById('nextRoundBtn');
+    const roundResult = document.getElementById('roundResult');
+
+    function demandLevelMultiplier(level) {
+      switch (level.toLowerCase()) {
+        case 'alta':
+          return 1.2;
+        case 'média':
+          return 1.0;
+        case 'baixa':
+          return 0.8;
+        default:
+          return 1.0;
+      }
+    }
+
+    function calculateSales(player, product, market) {
+      const demandMultiplier = demandLevelMultiplier(market.demandLevel);
+      const advertisingBoost = player.marketing?.[market.name]?.salesBoost || 0;
+
+    // Base de vendas mínima para não ficar zero
+      const baseSales = 5;
+
+    // Novo priceEffect: quanto mais barato, maior o impacto
+      const priceEffect = 100 / product.price;  // antes era 1 / product.price
+
+      const availableUnits = player.stock;
+
+      let salesUnits = demandMultiplier
+                        * (1 + advertisingBoost)
+                        * priceEffect
+                        * availableUnits
+                        + baseSales;
+
+    // Nunca vender mais que o estoque
+      salesUnits = Math.min(Math.floor(salesUnits), availableUnits);
+
+      return salesUnits;
+    }
+
+    nextRoundBtn.addEventListener('click', () => {
+        console.log(
+            'DEBUG Próxima rodada => estoque, preço, demanda, publicidade:',
+            player.stock, product.price, market.demandLevel, player.marketing?.[market.name]?.salesBoost
+        )
+      if (players.length === 0 || products.length === 0 || markets.length === 0) {
+        roundResult.textContent = 'Não há jogadores, produtos ou mercados suficientes para calcular a rodada.';
+        roundResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      let summary = '';
+
+      players.forEach((player, pIndex) => {
+           // For simplicity, assume each player sells all their products in all markets
+        let totalRevenue = 0;
+        let totalUnitsSold = 0;
+
+        products.forEach((product, prodIndex) => {
+          markets.forEach((market, mIndex) => {
+            const salesUnits = calculateSales(player, product, market);
+            const revenue = salesUnits * product.price;
+
+            // Update player's cash and stock
+            player.cash += revenue;
+            player.stock -= salesUnits;
+
+            totalRevenue += revenue;
+            totalUnitsSold += salesUnits;
+          });
+        });
+
+        summary += `Jogador ${player.name || pIndex + 1} vendeu ${totalUnitsSold} unidades e faturou ${formatCurrency(totalRevenue)}.<br/>`;
+      });
+
+      roundResult.innerHTML = summary;
+      roundResult.className = 'mt-4 text-green-600 font-semibold';
+
+      renderPlayers();
+    });
+  </script>
+
+  <section class="w-full max-w-4xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Eventos de Mercado e Eventos Aleatórios</h2>
+    <div id="marketEvent" class="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded text-yellow-800 font-semibold"></div>
+  </section>
+
+  <script>
+    const marketEvents = [
+      {
+        name: 'Boom Econômico',
+        effect: 1.3,
+        description: 'A economia está em alta, aumentando as vendas para todos os jogadores.',
+      },
+      {
+        name: 'Recessão',
+        effect: 0.7,
+        description: 'A economia está em recessão, reduzindo as vendas para todos os jogadores.',
+      },
+      {
+        name: 'Greve',
+        effect: 0.8,
+        description: 'Greves afetam a produção e vendas, causando uma queda nas vendas.',
+      },
+      {
+        name: 'Avanço Tecnológico',
+        effect: 1.2,
+        description: 'Novas tecnologias aumentam a eficiência e as vendas dos jogadores.',
+      },
+      {
+        name: 'Estabilidade Econômica',
+        effect: 1.0,
+        description: 'Mercado estável, sem impacto nas vendas.',
+      },
+    ];
+
+    let currentEvent = null;
+
+    function getRandomEvent() {
+      const index = Math.floor(Math.random() * marketEvents.length);
+      return marketEvents[index];
+    }
+
+    function applyEventEffect(salesUnits) {
+      if (!currentEvent) return salesUnits;
+      return Math.floor(salesUnits * currentEvent.effect);
+    }
+
+    function displayCurrentEvent() {
+      const eventDiv = document.getElementById('marketEvent');
+      if (currentEvent) {
+        eventDiv.innerHTML = `<strong>${currentEvent.name}:</strong> ${currentEvent.description}`;
+      } else {
+        eventDiv.textContent = '';
+      }
+    }
+
+    // Modify existing calculateSales function to include event effect
+    const originalCalculateSales = calculateSales;
+    calculateSales = function(player, product, market) {
+      let salesUnits = originalCalculateSales(player, product, market);
+      salesUnits = applyEventEffect(salesUnits);
+      return salesUnits;
+    };
+
+    // Modify nextRoundBtn event listener to set a new random event each round
+    nextRoundBtn.addEventListener('click', () => {
+        console.log(
+            'DEBUG Próxima rodada => estoque, preço, demanda, publicidade:',
+            player.stock, product.price, market.demandLevel, player.marketing?.[market.name]?.salesBoost
+        )
+      currentEvent = getRandomEvent();
+      displayCurrentEvent();
+
+      if (players.length === 0 || products.length === 0 || markets.length === 0) {
+        roundResult.textContent = 'Não há jogadores, produtos ou mercados suficientes para calcular a rodada.';
+        roundResult.className = 'mt-4 text-red-600 font-semibold';
+        return;
+      }
+
+      let summary = '';
+
+      players.forEach((player, pIndex) => {
+        // For simplicity, assume each player sells all their products in all markets
+        let totalRevenue = 0;
+        let totalUnitsSold = 0;
+
+        products.forEach((product, prodIndex) => {
+          markets.forEach((market, mIndex) => {
+            const salesUnits = calculateSales(player, product, market);
+            const revenue = salesUnits * product.price;
+
+            // Update player's cash and stock
+            player.cash += revenue;
+            player.stock -= salesUnits;
+
+            totalRevenue += revenue;
+            totalUnitsSold += salesUnits;
+          });
+        });
+
+        summary += `Jogador ${player.name || pIndex + 1} vendeu ${totalUnitsSold} unidades e faturou ${formatCurrency(totalRevenue)}.<br/>`;
+      });
+
+      roundResult.innerHTML = summary;
+      roundResult.className = 'mt-4 text-green-600 font-semibold';
+
+      renderPlayers();
+    });
+  </script>
+
+  <script>
+    // Add round counter and max rounds
+    let currentRound = 0;
+    const maxRounds = 10;
+
+    // Extend nextRoundBtn event listener to handle end of game
+    const originalNextRoundHandler = nextRoundBtn.onclick;
+    nextRoundBtn.addEventListener('click', () => {
+        console.log(
+            'DEBUG Próxima rodada => estoque, preço, demanda, publicidade:',
+            player.stock, product.price, market.demandLevel, player.marketing?.[market.name]?.salesBoost
+        )
+      if (currentRound >= maxRounds) {
+        roundResult.innerHTML = `<strong>Jogo encerrado!</strong> A rodada máxima (${maxRounds}) foi atingida.`;
+        nextRoundBtn.disabled = true;
+
+        // Calculate total assets and determine winner
+        let winner = null;
+        let highestAssets = 0;
+        let standings = '<h3 class="text-xl font-semibold mb-2">Classificação Final:</h3><ol class="list-decimal list-inside space-y-1">';
+
+        players.forEach((player, index) => {
+          // Calculate inventory value: sum of all products' price * stock (simplified)
+          let inventoryValue = 0;
+          products.forEach((product) => {
+            inventoryValue += product.price * player.stock;
+          });
+
+          const totalAssets = player.cash + inventoryValue;
+          if (totalAssets > highestAssets) {
+            highestAssets = totalAssets;
+            winner = player;
+          }
+          standings += `<li>${player.name || `Jogador ${index + 1}`}: ${formatCurrency(totalAssets)}</li>`;
+        });
+        standings += '</ol>';
+
+        roundResult.innerHTML += `<p class="mt-4 text-lg font-bold">Vencedor: ${winner.name || 'Jogador'} com ${formatCurrency(highestAssets)} em ativos totais.</p>`;
+        roundResult.innerHTML += standings;
+        return;
+      }
+
+      currentRound++;
+    });
+  </script>
+
+  <section class="w-full max-w-6xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-6 text-gray-800">Painel de Status das Empresas</h2>
+    <div id="playerDashboard" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+  </section>
+
+  <script>
+    const playerDashboard = document.getElementById('playerDashboard');
+
+    function getAdvertisingLevel(player) {
+      if (!player.marketing) return 0;
+      let totalRecognition = 0;
+      for (const market in player.marketing) {
+        totalRecognition += player.marketing[market].recognition;
+      }
+      return totalRecognition;
+    }
+
+    function getTransportStatus(player) {
+      // For simplicity, show total stock as transport status
+      return player.stock;
+    }
+
+    function scrollToSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function createPlayerCard(player, index) {
+      const card = document.createElement('div');
+      card.className = 'bg-gray-50 border border-gray-300 rounded p-4 shadow';
+
+      const title = document.createElement('h3');
+      title.textContent = player.name || `Jogador ${index + 1}`;
+      title.className = 'text-xl font-semibold mb-3 text-gray-800';
+
+      const cash = document.createElement('p');
+      cash.innerHTML = `<i class="fas fa-wallet mr-2 text-green-600"></i> Caixa: <span class="font-semibold">${formatCurrency(player.cash)}</span>`;
+
+      const stock = document.createElement('p');
+      stock.innerHTML = `<i class="fas fa-boxes mr-2 text-yellow-600"></i> Estoque: <span class="font-semibold">${player.stock}</span>`;
+
+      const marketShare = document.createElement('p');
+      marketShare.innerHTML = `<i class="fas fa-chart-line mr-2 text-blue-600"></i> Participação de Mercado: <span class="font-semibold">${player.marketShare}%</span>`;
+
+      const transportStatus = document.createElement('p');
+      transportStatus.innerHTML = `<i class="fas fa-truck mr-2 text-purple-600"></i> Status do Transporte: <span class="font-semibold">${getTransportStatus(player)}</span>`;
+
+      const advertisingLevel = document.createElement('p');
+      advertisingLevel.innerHTML = `<i class="fas fa-bullhorn mr-2 text-pink-600"></i> Nível de Publicidade: <span class="font-semibold">${getAdvertisingLevel(player).toFixed(2)}</span>`;
+
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.className = 'mt-4 flex flex-wrap gap-3';
+
+      const produceBtn = document.createElement('button');
+      produceBtn.textContent = 'Produzir';
+      produceBtn.className = 'px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition';
+      produceBtn.addEventListener('click', () => scrollToSection('productionForm'));
+
+      const advertiseBtn = document.createElement('button');
+      advertiseBtn.textContent = 'Anunciar';
+      advertiseBtn.className = 'px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 transition';
+      advertiseBtn.addEventListener('click', () => scrollToSection('marketingForm'));
+
+      const transportBtn = document.createElement('button');
+      transportBtn.textContent = 'Transportar';
+      transportBtn.className = 'px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition';
+      transportBtn.addEventListener('click', () => scrollToSection('transportForm'));
+
+      const priceBtn = document.createElement('button');
+      priceBtn.textContent = 'Definir Preço';
+      priceBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition';
+      priceBtn.addEventListener('click', () => scrollToSection('productForm'));
+
+      buttonsDiv.appendChild(produceBtn);
+      buttonsDiv.appendChild(advertiseBtn);
+      buttonsDiv.appendChild(transportBtn);
+      buttonsDiv.appendChild(priceBtn);
+
+      card.appendChild(title);
+      card.appendChild(cash);
+      card.appendChild(stock);
+      card.appendChild(marketShare);
+      card.appendChild(transportStatus);
+      card.appendChild(advertisingLevel);
+      card.appendChild(buttonsDiv);
+
+      return card;
+    }
+
+    function renderPlayerDashboard() {
+      playerDashboard.innerHTML = '';
+      players.forEach((player, index) => {
+        const card = createPlayerCard(player, index);
+        playerDashboard.appendChild(card);
+      });
+    }
+
+    // Call renderPlayerDashboard whenever players data changes
+    const originalRenderPlayers = renderPlayers;
+    renderPlayers = function() {
+      originalRenderPlayers();
+      renderPlayerDashboard();
+    };
+
+    // Initial render
+    renderPlayerDashboard();
+  </script>
+
+  <script>
+    // Add AI players and simple AI logic
+
+    function addAIPlayers(count) {
+      for (let i = 0; i < count; i++) {
+        players.push({
+          name: `IA Jogador ${players.length + 1}`,
+          cash: 500000,
+          stock: 0,
+          marketShare: 0,
+          marketing: {},
+          isAI: true,
+          aiStrategy: {
+            priceUndercut: 0.9, // AI tries to price 10% lower than average
+            advertisingBudget: 10000,
+            productionUnits: 100,
+            transportUnits: 80,
+          },
+        });
+      }
+      renderPlayers();
+    }
+
+    function aiSetPrices() {
+      // AI sets product prices lower than average price
+      if (products.length === 0) return;
+      const avgPrice = products.reduce((sum, p) => sum + p.price, 0) / products.length;
+      players.forEach((player) => {
+        if (player.isAI) {
+          products.forEach((product) => {
+            product.price = avgPrice * player.aiStrategy.priceUndercut;
+          });
+        }
+      });
+    }
+
+    function aiInvestAdvertising() {
+      players.forEach((player) => {
+        if (player.isAI) {
+          const budget = player.aiStrategy.advertisingBudget;
+          markets.forEach((market) => {
+            if (!player.marketing[market.name]) {
+              player.marketing[market.name] = { recognition: 0, salesBoost: 0 };
+            }
+            player.marketing[market.name].recognition += budget * 0.1 / markets.length;
+            player.marketing[market.name].salesBoost += budget * 0.05 / markets.length;
+          });
+          player.cash -= budget;
+        }
+      });
+    }
+
+    function aiProduceAndTransport() {
+      players.forEach((player) => {
+        if (player.isAI) {
+          products.forEach(() => {
+            // Produce units
+            player.stock += player.aiStrategy.productionUnits;
+            // Transport units
+            // For simplicity, assume transport cost is paid for all units transported
+            const totalTransportCost = markets.reduce((sum, market) => sum + market.transportCost, 0) * player.aiStrategy.transportUnits;
+            if (player.cash >= totalTransportCost) {
+              player.cash -= totalTransportCost;
+            }
+          });
+        }
+      });
+    }
+
+    // Integrate AI actions into next round
+    const originalNextRoundBtnHandler = nextRoundBtn.onclick;
+    nextRoundBtn.addEventListener('click', () => {
+        console.log(
+            'DEBUG Próxima rodada => estoque, preço, demanda, publicidade:',
+            player.stock, product.price, market.demandLevel, player.marketing?.[market.name]?.salesBoost
+        )
+      // AI makes decisions before human sales calculation
+      aiSetPrices();
+      aiInvestAdvertising();
+      aiProduceAndTransport();
+      renderPlayers();
+    });
+
+    // Add 2 AI players by default
+    addAIPlayers(2);
+  </script>
+
+  <script>
+    // Add sectors and allow players to choose sector at creation
+
+    const sectors = [
+      { id: 'tech', name: 'Empresa de Tecnologia' },
+      { id: 'food', name: 'Empresa de Alimentos' },
+      { id: 'clothing', name: 'Marca de Roupas' },
+    ];
+
+    // Modify add player logic to include sector selection
+    function addPlayer(name = '', isAI = false, sectorId = null) {
+      const sector = sectors.find(s => s.id === sectorId) || sectors[0];
+      players.push({
+        name: name || (isAI ? `IA Jogador ${players.length + 1}` : `Jogador ${players.length + 1}`),
+        cash: 150000,
+        stock: 0,
+        marketShare: 0,
+        marketing: {},
+        isAI: isAI,
+        sector: sector,
+        aiStrategy: isAI ? {
+          priceUndercut: 0.9,
+          advertisingBudget: 10000,
+          productionUnits: 100,
+          transportUnits: 80,
+        } : null,
+      });
+      renderPlayers();
+    }
+
+    // Update addAIPlayers to use addPlayer with sector
+    function addAIPlayers(count) {
+      for (let i = 0; i < count; i++) {
+        // Random sector for AI
+        const randomSector = sectors[Math.floor(Math.random() * sectors.length)];
+        addPlayer(null, true, randomSector.id);
+      }
+    }
+
+    // Update UI to show sector in player dashboard and player list
+    const originalCreatePlayerCard = createPlayerCard;
+    createPlayerCard = function(player, index) {
+      const card = originalCreatePlayerCard(player, index);
+
+    // Só insere o setor se o objeto sector existir e tiver name
+    if (player && player.sector && player.sector.name) {
+      const sectorInfo = document.createElement('p');
+      sectorInfo.innerHTML = `
+        <i class="fas fa-industry mr-2 text-gray-600"></i>
+        Setor: <span class="font-semibold">${player.sector.name}</span>
+      `;
+      // Garante que card seja um elemento e tenha ao menos 4 filhos
+      if (card instanceof HTMLElement && card.children.length >= 4) {
+        card.insertBefore(sectorInfo, card.children[3]);
+      }
+    }
+      return card;
+    };
+
+    // Modify player addition UI to include sector selection (if applicable)
+    // For simplicity, this example assumes players are added programmatically or via AI only
+
+    // Initial AI players with sectors
+    addAIPlayers(2);
+  </script>
+
+  <section class="w-full max-w-6xl mt-10 bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-semibold mb-6 text-gray-800">Tabela de Classificação e Estatísticas</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white border border-gray-300 rounded">
+        <thead>
+          <tr class="bg-gray-100 text-gray-700">
+            <th class="py-2 px-4 border-b border-gray-300 text-left">Posição</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-left">Jogador</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-left">Setor</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-right">Caixa</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-right">Estoque</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-right">Participação de Mercado (%)</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-right">Publicidade</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-right">Transporte</th>
+            <th class="py-2 px-4 border-b border-gray-300 text-right">Ativos Totais</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody" class="text-gray-700"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    const leaderboardBody = document.getElementById('leaderboardBody');
+
+    function updateLeaderboard() {
+      // Calculate total assets and sort players
+      const playersWithAssets = players.map((player, index) => {
+        let inventoryValue = 0;
+        products.forEach((product) => {
+          inventoryValue += product.price * player.stock;
+        });
+        const totalAssets = player.cash + inventoryValue;
+        return { player, index, totalAssets };
+      });
+
+      playersWithAssets.sort((a, b) => b.totalAssets - a.totalAssets);
+
+      leaderboardBody.innerHTML = '';
+      playersWithAssets.forEach(({ player, index, totalAssets }, rank) => {
+        const row = document.createElement('tr');
+        row.className = rank % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+        const positionCell = document.createElement('td');
+        positionCell.className = 'py-2 px-4 border-b border-gray-300';
+        positionCell.textContent = rank + 1;
+
+        const nameCell = document.createElement('td');
+        nameCell.className = 'py-2 px-4 border-b border-gray-300';
+        nameCell.textContent = player.name || `Jogador ${index + 1}`;
+
+        const sectorCell = document.createElement('td');
+        sectorCell.className = 'py-2 px-4 border-b border-gray-300';
+        sectorCell.textContent = player.sector ? player.sector.name : 'N/A';
+
+        const cashCell = document.createElement('td');
+        cashCell.className = 'py-2 px-4 border-b border-gray-300 text-right';
+        cashCell.textContent = formatCurrency(player.cash);
+
+        const stockCell = document.createElement('td');
+        stockCell.className = 'py-2 px-4 border-b border-gray-300 text-right';
+        stockCell.textContent = player.stock;
+
+        const marketShareCell = document.createElement('td');
+        marketShareCell.className = 'py-2 px-4 border-b border-gray-300 text-right';
+        marketShareCell.textContent = player.marketShare.toFixed(2);
+
+        const advertisingCell = document.createElement('td');
+        advertisingCell.className = 'py-2 px-4 border-b border-gray-300 text-right';
+        advertisingCell.textContent = getAdvertisingLevel(player).toFixed(2);
+
+        const transportCell = document.createElement('td');
+        transportCell.className = 'py-2 px-4 border-b border-gray-300 text-right';
+        transportCell.textContent = getTransportStatus(player);
+
+        const assetsCell = document.createElement('td');
+        assetsCell.className = 'py-2 px-4 border-b border-gray-300 text-right';
+        assetsCell.textContent = formatCurrency(totalAssets);
+
+        row.appendChild(positionCell);
+        row.appendChild(nameCell);
+        row.appendChild(sectorCell);
+        row.appendChild(cashCell);
+        row.appendChild(stockCell);
+        row.appendChild(marketShareCell);
+        row.appendChild(advertisingCell);
+        row.appendChild(transportCell);
+        row.appendChild(assetsCell);
+
+        leaderboardBody.appendChild(row);
+      });
+    }
+
+    // Update leaderboard after each round and relevant updates
+    const originalNextRoundBtnClick = nextRoundBtn.onclick;
+    nextRoundBtn.addEventListener('click', () => {
+        console.log(
+            'DEBUG Próxima rodada => estoque, preço, demanda, publicidade:',
+            player.stock, product.price, market.demandLevel, player.marketing?.[market.name]?.salesBoost
+        )
+      updateLeaderboard();
+    });
+
+    // Also update leaderboard when players data changes
+    const originalRenderPlayersForLeaderboard = renderPlayers;
+    renderPlayers = function() {
+      originalRenderPlayersForLeaderboard();
+      updateLeaderboard();
+    };
+
+    // Initial leaderboard update
+    updateLeaderboard();
+  </script>
+</body>
+</html>
